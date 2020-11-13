@@ -1,6 +1,7 @@
 package main
 
 import (
+	//"crypto/md5"
 	"encoding/base64"
 	"fmt"
 	"net"
@@ -8,7 +9,7 @@ import (
 	"strings"
 )
 
-func client(username string, serverIP string, serverPort int, clientUDPPort int) {
+func client(username string, serverIP string, clientIP string, serverPort int, clientUDPPort int) {
 	fmt.Println("Iniciando cliente")
 	serverURL := serverIP + ":" + strconv.Itoa(serverPort)
 	connTCP, err := net.Dial("tcp", serverURL)
@@ -37,7 +38,7 @@ func client(username string, serverIP string, serverPort int, clientUDPPort int)
 
 			if strings.Contains(string(buffer), "ok") {
 				fmt.Println("Obteniendo mensaje")
-				connUDP, er := net.ListenPacket("udp", "127.0.0.1:"+strconv.Itoa(clientUDPPort))
+				connUDP, er := net.ListenPacket("udp", clientIP+":"+strconv.Itoa(clientUDPPort))
 
 				if er != nil {
 					fmt.Println("Error inesperado en la conexión")
@@ -49,7 +50,7 @@ func client(username string, serverIP string, serverPort int, clientUDPPort int)
 				if strings.Contains(string(buffer), "ok") {
 					connUDP.ReadFrom(buffer)
 					message, _ := base64.StdEncoding.DecodeString(string(buffer))
-					fmt.Println(string(message))
+					fmt.Println("Mensaje recibido: " + string(message))
 				}
 			}
 		} else {
@@ -66,17 +67,20 @@ func client(username string, serverIP string, serverPort int, clientUDPPort int)
 func main() {
 	var username string
 	var serverIP string
+	var clientIP string
 	var serverPort int
 	var clientUDPPort int
 
 	fmt.Println("Indique su nombre de usuario:")
 	fmt.Scanf("%s", &username)
-	fmt.Println("Indique la dirección ip del servidor:")
+	fmt.Println("Indique la dirección ip del servidor: (Ej: 192.168.0.1)")
 	fmt.Scanf("%s", &serverIP)
+	fmt.Println("Indique su dirección ip: (Ej: 192.168.0.1, si es la misma que la del servidor puede escribir 127.0.0.1)")
+	fmt.Scanf("%s", &clientIP)
 	fmt.Println("Indique el puerto del servidor:")
 	fmt.Scanf("%d", &serverPort)
 	fmt.Println("Indique puerto por donde quiere recibir el mensaje:")
 	fmt.Scanf("%d", &clientUDPPort)
 
-	client(username, serverIP, serverPort, clientUDPPort)
+	client(username, serverIP, clientIP, serverPort, clientUDPPort)
 }
