@@ -124,7 +124,7 @@ func main() {
 	fmt.Scanf("%s", &username)
 	fmt.Println("Indique la dirección ip del servidor: (Ej: 192.168.0.1)")
 	fmt.Scanf("%s", &serverIP)
-	fmt.Println("Indique su dirección ip: (Ej: 192.168.0.1, si es la misma que la del servidor puede escribir 127.0.0.1)")
+	fmt.Println("Indique su dirección ip: (Ej: 192.168.0.1)")
 	fmt.Scanf("%s", &clientIP)
 	fmt.Println("Indique el puerto del servidor:")
 	fmt.Scanf("%d", &serverPort)
