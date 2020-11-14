@@ -121,15 +121,15 @@ func main() {
 	var clientUDPPort int
 
 	fmt.Println("Indique su nombre de usuario:")
-	fmt.Scanf("%s", &username)
+	fmt.Scanf("%s\n", &username)
 	fmt.Println("Indique la dirección ip del servidor: (Ej: 192.168.0.1)")
-	fmt.Scanf("%s", &serverIP)
+	fmt.Scanf("%s\n", &serverIP)
 	fmt.Println("Indique su dirección ip: (Ej: 192.168.0.1)")
-	fmt.Scanf("%s", &clientIP)
+	fmt.Scanf("%s\n", &clientIP)
 	fmt.Println("Indique el puerto del servidor:")
-	fmt.Scanf("%d", &serverPort)
+	fmt.Scanf("%d\n", &serverPort)
 	fmt.Println("Indique puerto por donde quiere recibir el mensaje:")
-	fmt.Scanf("%d", &clientUDPPort)
+	fmt.Scanf("%d\n", &clientUDPPort)
 
 	client(username, serverIP, clientIP, serverPort, clientUDPPort)
 }
