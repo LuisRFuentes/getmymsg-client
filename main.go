@@ -1,12 +1,14 @@
 package main
 
 import (
-	//"crypto/md5"
+	"crypto/md5"
 	"encoding/base64"
+	"encoding/hex"
 	"fmt"
 	"net"
 	"strconv"
 	"strings"
+	"time"
 )
 
 func client(username string, serverIP string, clientIP string, serverPort int, clientUDPPort int) {
@@ -20,19 +22,23 @@ func client(username string, serverIP string, clientIP string, serverPort int, c
 	} else {
 		fmt.Println("Autenticando al usuario")
 		connTCP.Write([]byte("helloiam " + username))
+		connTCP.SetReadDeadline(time.Now().Add(20 * time.Second))
 		_, err := connTCP.Read(buffer)
 
 		if err != nil {
 			fmt.Println("Error inesperado en la conexión")
+			connTCP.Close()
 			return
 		}
 
 		if strings.Contains(string(buffer), "ok") {
 			connTCP.Write([]byte("msglen"))
+			connTCP.SetReadDeadline(time.Now().Add(20 * time.Second))
 			_, err := connTCP.Read(buffer)
 
 			if err != nil {
 				fmt.Println("Error inesperado en la conexión")
+				connTCP.Close()
 				return
 			}
 
@@ -41,16 +47,59 @@ func client(username string, serverIP string, clientIP string, serverPort int, c
 				connUDP, er := net.ListenPacket("udp", clientIP+":"+strconv.Itoa(clientUDPPort))
 
 				if er != nil {
-					fmt.Println("Error inesperado en la conexión")
+					fmt.Println("Error inesperado en el cliente")
+					connTCP.Close()
+					return
 				}
 
 				connTCP.Write([]byte("givememsg " + strconv.Itoa(clientUDPPort)))
-				connTCP.Read(buffer)
+				_, err := connTCP.Read(buffer)
+
+				if err != nil {
+					fmt.Println("Error inesperado en la conexión")
+					connTCP.Close()
+					connUDP.Close()
+					return
+				}
 
 				if strings.Contains(string(buffer), "ok") {
-					connUDP.ReadFrom(buffer)
+					connUDP.SetReadDeadline(time.Now().Add(20 * time.Second))
+					_, _, err := connUDP.ReadFrom(buffer)
+
+					if err != nil {
+						fmt.Println("Error inesperado en la conexión")
+						connTCP.Close()
+						connUDP.Close()
+						return
+					}
+
 					message, _ := base64.StdEncoding.DecodeString(string(buffer))
 					fmt.Println("Mensaje recibido: " + string(message))
+
+					sum := md5.Sum(message)
+					sumString := hex.EncodeToString(sum[:])
+					cmd := "chkmsg " + sumString
+					connTCP.Write([]byte(cmd))
+					connTCP.SetReadDeadline(time.Now().Add(20 * time.Second))
+					_, er = connTCP.Read(buffer)
+
+					if er == nil {
+						if strings.Contains(string(buffer), "ok") {
+							fmt.Println("Mensaje Comprobado")
+						} else if strings.Contains(string(buffer), "invalid") {
+							fmt.Println("Formato de checksum no valido")
+						} else {
+							fmt.Println("Checksum enviado no coincide con el del mensaje")
+						}
+						connUDP.Close()
+					} else {
+						fmt.Println("Error inesperado en la conexión")
+						connTCP.Close()
+						connUDP.Close()
+						return
+					}
+				} else {
+					fmt.Println("Puerto UDP invalido")
 				}
 			}
 		} else {
